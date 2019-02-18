@@ -1,5 +1,8 @@
 const gallery = document.getElementById('gallery');
-
+//create a modal div to hold the generated modals
+const modalWindow = document.createElement('div');
+modalWindow.setAttribute('id', 'modal-window');
+document.querySelector('body').appendChild(modalWindow);
 
 // Fetch Data Function
 function fetchData(url) {
@@ -19,7 +22,7 @@ function checkStatus(response) {
 //Gallery HTML Generator
 function generateGalleryHTML(data) {
     const html = data.map(el =>
-    `<div class="card">
+    `<div class="card" id="${el.login.username}">
         <div class="card-img-container">
             <img class="card-img" src="${el.picture.thumbnail}" alt="profile picture">
         </div>
@@ -28,43 +31,68 @@ function generateGalleryHTML(data) {
             <p class="card-text">${el.email}</p>
             <p class="card-text cap">${el.location.city}, ${el.location.state}</p>
         </div>
-    </div>` )
+    </div>` ).join('')
 
     gallery.innerHTML = html;
 }
 
 // generate modal
-function generateModal (target) {
-    const modalHTML = 
-    `<div class="modal-container">
-    <div class="modal">
+function generateModal (data) {
+    
+    data.forEach(el =>  {
+        const modalDiv = document.createElement('div');
+        modalDiv.className = 'modal-container'
+        modalDiv.setAttribute('id', `${el.login.username}`);
+        modalDiv.style.display = 'none'
+        let modalHtml =  `<div class="modal">
         <button type="button" id="modal-close-btn" class="modal-close-btn"><strong>X</strong></button>
         <div class="modal-info-container">
-            <img class="modal-img" src=${target.picture.large} alt="profile picture">
-            <h3 id="name" class="modal-name cap">name</h3>
-            <p class="modal-text">email</p>
-            <p class="modal-text cap">city</p>
+            <img class="modal-img" src=${el.picture.large} alt="profile picture">
+            <h3 id="name" class="modal-name cap">${el.name.first} ${el.name.last}</h3>
+            <p class="modal-text">${el.email}</p>
+            <p class="modal-text cap">${el.location.city}</p>
             <hr>
-            <p class="modal-text">(555) 555-5555</p>
-            <p class="modal-text">123 Portland Ave., Portland, OR 97204</p>
+            <p class="modal-text">${el.phone}</p>
+            <p class="modal-text">${el.location.street}, ${el.location.city},  ${el.location.state} ${el.location.postcode}</p>
             <p class="modal-text">Birthday: 10/21/2015</p>
-        </div>
-    </div>`
-    document.querySelector('body').innerHTML = modalHTML;
+        </div>`
+        modalDiv.innerHTML = modalHtml 
+        document.querySelector('#modal-window').append(modalDiv);
+    }); // end modal map
+    
 }
 
-let resultsArr = [];
+
 // Fetch card data and display in gallery
 fetchData('https://randomuser.me/api/?results=12')
     .then(data => data.results)
     .then(results => {
-        resultsArr.push(results);
-        generateGalleryHTML(results)
-    })
+        console.log(results)
+        generateGalleryHTML(results);
+        generateModal(results);
+    });
 
 //event listener
 gallery.addEventListener('click', (e) => {
-    console.log(e.target)
-    let card = resultsArr.filter(el => el === e.target);
-    console.log(card)
-})
+    let card;
+    const modals = document.querySelectorAll('.modal-container');
+    if(e.target.parentNode.parentNode.getAttribute('class') === 'card'){
+        card = e.target.parentNode.parentNode
+    } else {
+        card = e.target
+    }
+    cardID = card.getAttribute('id');
+    modals.forEach(el => {
+        if(el.getAttribute('id') === cardID){
+            el.style.display = 'block'
+        }
+    });//end iteration of modal elements
+});//end card click listener
+
+modalWindow.addEventListener('click', (e) => {
+    if(e.target.getAttribute('class') === 'modal-container'){
+        e.target.style.display = 'none'
+    } else if (e.target.parentNode.type === 'button'){
+        e.target.parentNode.parentNode.parentNode.style.display = 'none'
+    }
+});//end modal close buton
