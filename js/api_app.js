@@ -1,4 +1,11 @@
 const gallery = document.getElementById('gallery');
+
+//create a no results for search
+const noResults = document.createElement('h3');
+noResults.innerText = 'No Results Found';
+noResults.style.display = 'none'
+
+
 //create a modal div to hold the generated modals
 const modalWindow = document.createElement('div');
 modalWindow.setAttribute('id', 'modal-window');
@@ -22,7 +29,7 @@ function checkStatus(response) {
 //Gallery HTML Generator
 function generateGalleryHTML(data) {
     const html = data.map(el =>
-    `<div class="card" id="${el.login.username}">
+        `<div class="card" id="${el.login.username}">
         <div class="card-img-container">
             <img class="card-img" src="${el.picture.thumbnail}" alt="profile picture">
         </div>
@@ -34,17 +41,18 @@ function generateGalleryHTML(data) {
     </div>` ).join('')
 
     gallery.innerHTML = html;
+    gallery.appendChild(noResults);
 }
 
 // generate modal
-function generateModal (data) {
-    
-    data.forEach(el =>  {
+function generateModal(data) {
+
+    data.forEach(el => {
         const modalDiv = document.createElement('div');
         modalDiv.className = 'modal-container'
         modalDiv.setAttribute('id', `${el.login.username}`);
         modalDiv.style.display = 'none'
-        let modalHtml =  `<div class="modal">
+        let modalHtml = `<div class="modal">
         <button type="button" id="modal-close-btn" class="modal-close-btn"><strong>X</strong></button>
         <div class="modal-info-container">
             <img class="modal-img" src=${el.picture.large} alt="profile picture">
@@ -56,43 +64,88 @@ function generateModal (data) {
             <p class="modal-text">${el.location.street}, ${el.location.city},  ${el.location.state} ${el.location.postcode}</p>
             <p class="modal-text">Birthday: 10/21/2015</p>
         </div>`
-        modalDiv.innerHTML = modalHtml 
+        modalDiv.innerHTML = modalHtml
         document.querySelector('#modal-window').append(modalDiv);
     }); // end modal map
-    
+
 }
 
 
-// Fetch card data and display in gallery
-fetchData('https://randomuser.me/api/?results=12')
+// Fetch card data and display in gallery and generate the modals to be manipulated
+fetchData('https://randomuser.me/api/?results=12&nat=us,gb,au')
     .then(data => data.results)
     .then(results => {
         console.log(results)
         generateGalleryHTML(results);
         generateModal(results);
+        generateSearch();
     });
 
-//event listener
+//SearchBar
+function generateSearch() {
+    document.querySelector('.search-container').innerHTML = `<form action="#" method="get">
+    <input type="text" id="search-input" class="search-input" placeholder="Search...">
+    <input type="submit" value="&#x1F50D;" id="serach-submit" class="search-submit">
+    </form>`
+    const form = document.querySelector('form');
+    const cards = document.querySelectorAll('.card');
+    const userInput = document.querySelector('#search-input');
+
+    //filter event listener
+    form.addEventListener('keyup', (e) => {
+        const userInput = e.target.value.toLowerCase();
+        let filterArr = [];
+        cards.forEach(employee => {
+            employee.style.display = ""
+            noResults.style.display = 'none'
+            if (employee.textContent.indexOf(userInput) === -1) {
+                employee.style.display = 'none'
+            } else {
+                filterArr.push(employee);
+            }
+            if (filterArr.length === 0) {
+                noResults.style.display = 'block';
+            }
+        });//end for each for cards
+    }); //end keyup listener (for filtering)
+
+    //submit listener
+    form.addEventListener('submit', (e) => {
+        e.preventDefault();
+        userInput.value.toLowerCase();
+        cards.forEach(employee => {
+            if (!employee.innerText.includes(userInput)) {
+                employee.style.display = "none"
+            }
+        }); //end submit listener
+    });
+}
+
+
+
+//event listeners
+//open modal of target card clicked
 gallery.addEventListener('click', (e) => {
     let card;
     const modals = document.querySelectorAll('.modal-container');
-    if(e.target.parentNode.parentNode.getAttribute('class') === 'card'){
+    if (e.target.parentNode.parentNode.getAttribute('class') === 'card') {
         card = e.target.parentNode.parentNode
     } else {
         card = e.target
     }
     cardID = card.getAttribute('id');
     modals.forEach(el => {
-        if(el.getAttribute('id') === cardID){
+        if (el.getAttribute('id') === cardID) {
             el.style.display = 'block'
         }
     });//end iteration of modal elements
 });//end card click listener
 
+//close modal
 modalWindow.addEventListener('click', (e) => {
-    if(e.target.getAttribute('class') === 'modal-container'){
+    if (e.target.getAttribute('class') === 'modal-container') {
         e.target.style.display = 'none'
-    } else if (e.target.parentNode.type === 'button'){
+    } else if (e.target.parentNode.type === 'button') {
         e.target.parentNode.parentNode.parentNode.style.display = 'none'
     }
 });//end modal close buton
