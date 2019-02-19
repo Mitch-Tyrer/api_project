@@ -46,7 +46,6 @@ function generateGalleryHTML(data) {
 
 // generate modal
 function generateModal(data) {
-
     data.forEach(el => {
         const modalDiv = document.createElement('div');
         modalDiv.className = 'modal-container'
@@ -63,11 +62,16 @@ function generateModal(data) {
             <p class="modal-text">${el.phone}</p>
             <p class="modal-text">${el.location.street}, ${el.location.city},  ${el.location.state} ${el.location.postcode}</p>
             <p class="modal-text">Birthday: 10/21/2015</p>
-        </div>`
+        </div>
+        <div class="modal-btn-container">
+                    <button type="button" id="modal-prev" class="modal-prev btn">Prev</button>
+                    <button type="button" id="modal-next" class="modal-next btn">Next</button>
+                </div>
+            </div>`
         modalDiv.innerHTML = modalHtml
         document.querySelector('#modal-window').append(modalDiv);
     }); // end modal map
-
+    
 }
 
 
@@ -75,7 +79,6 @@ function generateModal(data) {
 fetchData('https://randomuser.me/api/?results=12&nat=us,gb,au')
     .then(data => data.results)
     .then(results => {
-        console.log(results)
         generateGalleryHTML(results);
         generateModal(results);
         generateSearch();
@@ -123,11 +126,34 @@ function generateSearch() {
 
 
 
+//function for modal scrolling
+function modalScroll (index) {
+    const modals = document.querySelectorAll('.modal-container')
+    const next = document.querySelector('#modal-next');
+    const prev = document.querySelector('#modal-prev');
+    const amount = modals.length
+    let current = modals[index]
+    let counter = index
+
+    next.addEventListener('click', (e) => {
+        current.style.display = 'none'
+        counter += 1
+        current= modals[counter]
+        current.style.display = 'block'
+    });
+    prev.addEventListener('click', (e) => {
+        counter -= 1
+        console.log(counter)
+    });
+}
+
 //event listeners
 //open modal of target card clicked
 gallery.addEventListener('click', (e) => {
     let card;
+    let index;
     const modals = document.querySelectorAll('.modal-container');
+    
     if (e.target.parentNode.parentNode.getAttribute('class') === 'card') {
         card = e.target.parentNode.parentNode
     } else {
@@ -136,9 +162,11 @@ gallery.addEventListener('click', (e) => {
     cardID = card.getAttribute('id');
     modals.forEach(el => {
         if (el.getAttribute('id') === cardID) {
-            el.style.display = 'block'
+            el.style.display = 'block';
+            index = Array.from(modals).indexOf(el)
         }
     });//end iteration of modal elements
+    modalScroll(index);
 });//end card click listener
 
 //close modal
@@ -149,3 +177,4 @@ modalWindow.addEventListener('click', (e) => {
         e.target.parentNode.parentNode.parentNode.style.display = 'none'
     }
 });//end modal close buton
+
