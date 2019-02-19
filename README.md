@@ -41,3 +41,7 @@ JQuery can be used.
 2. Add a way to toggle back and forth between employees when modal is open.
     - there should be no erros at the beginning or end
 3. Change the CSS to your liking
+
+################# Style Changes ###################
+- changed the font
+- updated the color scheme for a desert theme for the cards and modals
