@@ -1,4 +1,5 @@
 const gallery = document.getElementById('gallery');
+let dataResults;
 
 //create a no results for search
 const noResults = document.createElement('h3');
@@ -45,13 +46,13 @@ function generateGalleryHTML(data) {
 }
 
 // generate modal
-function generateModal(data) {
-    data.forEach(el => {
-        const modalDiv = document.createElement('div');
-        modalDiv.className = 'modal-container'
-        modalDiv.setAttribute('id', `${el.login.username}`);
-        modalDiv.style.display = 'none'
-        let modalHtml = `<div class="modal">
+function generateModal(el, index) {
+    //data.forEach(el => {
+    const modalDiv = document.createElement('div');
+    modalDiv.className = 'modal-container'
+    modalDiv.setAttribute('id', `${el.login.username}`);
+    //modalDiv.style.display = 'none'
+    let modalHtml = `<div class="modal">
         <button type="button" id="modal-close-btn" class="modal-close-btn"><strong>X</strong></button>
         <div class="modal-info-container">
             <img class="modal-img" src=${el.picture.large} alt="profile picture">
@@ -61,17 +62,18 @@ function generateModal(data) {
             <hr>
             <p class="modal-text">${el.phone}</p>
             <p class="modal-text">${el.location.street}, ${el.location.city},  ${el.location.state} ${el.location.postcode}</p>
-            <p class="modal-text">Birthday: 10/21/2015</p>
+            <p class="modal-text">Birthday: ${el.dob.date}</p>
         </div>
         <div class="modal-btn-container">
                     <button type="button" id="modal-prev" class="modal-prev btn">Prev</button>
                     <button type="button" id="modal-next" class="modal-next btn">Next</button>
                 </div>
             </div>`
-        modalDiv.innerHTML = modalHtml
-        document.querySelector('#modal-window').append(modalDiv);
-    }); // end modal map
-    
+    modalDiv.innerHTML = modalHtml
+    document.querySelector('#modal-window').append(modalDiv);
+    modalScroll(index)
+    // }); // end modal map
+
 }
 
 
@@ -79,8 +81,9 @@ function generateModal(data) {
 fetchData('https://randomuser.me/api/?results=12&nat=us,gb,au')
     .then(data => data.results)
     .then(results => {
+        dataResults = results
         generateGalleryHTML(results);
-        generateModal(results);
+        //generateModal(results);
         generateSearch();
     });
 
@@ -127,33 +130,73 @@ function generateSearch() {
 
 
 //function for modal scrolling
-function modalScroll (index) {
-    const modals = document.querySelectorAll('.modal-container')
+function modalScroll(index) {
+    const modal = document.querySelector('.modal-container')
     const next = document.querySelector('#modal-next');
     const prev = document.querySelector('#modal-prev');
-    const amount = modals.length
-    let current = modals[index]
-    let counter = index
+    const amount = dataResults.length
 
     next.addEventListener('click', (e) => {
-        current.style.display = 'none'
-        counter += 1
-        current= modals[counter]
-        current.style.display = 'block'
+        modal.remove();
+        index += 1
+        if (index < amount) {
+            generateModal(dataResults[index], index)
+        } else {
+            index = 0;
+            generateModal(dataResults[index], index)
+        }
+
     });
     prev.addEventListener('click', (e) => {
-        counter -= 1
-        console.log(counter)
+        modal.remove();
+        index -= 1
+        if (index > 0) {
+            generateModal(dataResults[index], index)
+        } else {
+            index = amount - 1;
+            generateModal(dataResults[index], index)
+        }
     });
 }
 
 //event listeners
-//open modal of target card clicked
+
 gallery.addEventListener('click', (e) => {
     let card;
     let index;
+
+    if (e.target.parentNode.parentNode.getAttribute('class') === 'card') {
+        card = e.target.parentNode.parentNode
+    } else {
+        card = e.target
+    }
+    let cardID = card.getAttribute('id');
+    dataResults.forEach(el => {
+        if (el.login.username === cardID) {
+            index = dataResults.indexOf(el);
+            generateModal(el, index);
+        }
+    });
+});
+
+//close modal
+modalWindow.addEventListener('click', (e) => {
+    let modal = document.querySelector('.modal-container')
+    if (e.target.getAttribute('class') === 'modal-container' || e.target.parentNode.type === 'button') {
+        modal.remove();
+    }
+});//end modal close buton
+
+
+
+
+//######################## original modal listeners ##############################
+//open modal of target card clicked
+/* gallery.addEventListener('click', (e) => {
+    let card;
+    let index;
     const modals = document.querySelectorAll('.modal-container');
-    
+
     if (e.target.parentNode.parentNode.getAttribute('class') === 'card') {
         card = e.target.parentNode.parentNode
     } else {
@@ -167,8 +210,8 @@ gallery.addEventListener('click', (e) => {
         }
     });//end iteration of modal elements
     modalScroll(index);
-});//end card click listener
-
+});//end card click listener */
+/*
 //close modal
 modalWindow.addEventListener('click', (e) => {
     if (e.target.getAttribute('class') === 'modal-container') {
@@ -176,5 +219,5 @@ modalWindow.addEventListener('click', (e) => {
     } else if (e.target.parentNode.type === 'button') {
         e.target.parentNode.parentNode.parentNode.style.display = 'none'
     }
-});//end modal close buton
+});//end modal close buton */
 
